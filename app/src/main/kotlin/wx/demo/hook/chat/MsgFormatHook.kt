@@ -28,8 +28,13 @@ object MsgFormatHook : SwitchHook("MsgFormatHook"), IDexFind {
     private object ValMsgFormatTextFormat : DefaultData("MsgFormatHook.ValMsgFormatTextFormat", stringDefVal = TEXT_FORMAT_DEF_VAL)
     private object ValMsgFormatTimeFormat : DefaultData("MsgFormatHook.ValMsgFormatTimeFormat", stringDefVal = TIME_FORMAT_DEF_VAL)
 
+    private val digitMapCircled = mapOf(
+        '0' to "₀", '1' to "₁", '2' to "₂", '3' to "₃", '4' to "₄",
+        '5' to "₅", '6' to "₆", '7' to "₇", '8' to "₈", '9' to "₉"
+    )
+
     private const val TEXT_FORMAT_DEF_VAL = "\${sendText}\${line}\${sendTime}"
-    private const val TIME_FORMAT_DEF_VAL = "yyyy-MM-dd HH:mm:ss"
+    private const val TIME_FORMAT_DEF_VAL = "yyyy₋MM₋dd HH܄mm܄ss"
     private val availablePlaceholders = listOf(
         "\${sendText}", "\${line}", "\${sendTime}"
     )
