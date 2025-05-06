@@ -19,6 +19,7 @@ import me.hd.wauxv.hook.factory.findDexClassMethod
 import me.hd.wauxv.hook.factory.toDexConstructor
 import org.lsposed.lsparanoid.Obfuscate
 import org.luckypray.dexkit.DexKitBridge
+import java.lang.StringBuilder // 引入 StringBuilder
 
 @Obfuscate
 @HookAnno
@@ -79,14 +80,51 @@ object MsgFormatHook : SwitchHook("MsgFormatHook"), IDexFind {
             negativeButton()
         }
     }
+    
+    // --- 新增：数字替换辅助函数 ---
+    /**
+     * 将输入字符串中的数字根据提供的映射表进行替换
+     * @param input 原始字符串 (例如格式化后的时间)
+     * @param digitMap 数字字符到替换字符串的映射
+     * @return 替换数字后的字符串
+     */
+    private fun replaceDigits(input: String, digitMap: Map<Char, String>): String {
+        val result = StringBuilder(input.length) // 预估长度，提高效率
+        for (char in input) {
+            // 尝试从映射表中获取当前字符的替换项
+            // 如果 char 是数字且在 map 的 key 中，则 replacement 不为 null
+            val replacement = digitMap[char]
+            if (replacement != null) {
+                // 如果找到了替换项，则追加替换后的字符串
+                result.append(replacement)
+            } else {
+                // 如果不是需要替换的数字，或者映射表中没有定义，则追加原始字符
+                result.append(char)
+            }
+        }
+        return result.toString()
+    }
 
     private fun formatMsg(msg: String): String {
+        // 1. 获取当前时间戳
+        val currentTimeMillis = System.currentTimeMillis()
+        // 2. 使用用户配置的格式，格式化时间 (得到标准时间字符串)
+        val standardFormattedTime = currentTimeMillis.toDateStr(ValMsgFormatTimeFormat.stringVal)
+
+        // --- 新增：应用自定义数字替换 ---
+        // 在这里选择你想要使用的替换规则 (digitMap)
+        // 你也可以根据需要添加配置项来让用户选择使用哪个 map
+        val activeDigitMap = digitMapCircled // 或者使用 digitMapChinese
+        val customFormattedTime = replaceDigits(standardFormattedTime, activeDigitMap)
+        // --- 新增结束 ---
+
+        // 3. 使用 *替换数字后* 的时间字符串，替换占位符
         return ValMsgFormatTextFormat.stringVal
             .replace("\${sendText}", msg)
             .replace("\${line}", "\n")
-            .replace("\${sendTime}", System.currentTimeMillis().toDateStr(ValMsgFormatTimeFormat.stringVal))
+            .replace("\${sendTime}", customFormattedTime) // 使用 customFormattedTime
     }
-
+    
     override fun initOnce() {
         MethodSendTextComponent.toDexConstructor {
             hook {
